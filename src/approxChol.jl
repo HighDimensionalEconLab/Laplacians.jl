@@ -587,6 +587,26 @@ function LDLsolver(ldli::LDLinv, b::Vector)
     return y
 end
 
+# TODO: Should we flip the arguments later? I am keeping with the packages style
+function LDLsolver!(ldli::LDLinv, b::Vector)
+    forward!(ldli, b)
+
+    @inbounds for i in 1:(length(ldli.d))
+        if ldli.d[i] != 0
+            b[i] /= ldli.d[i]
+        end
+    end
+
+    backward!(ldli, b)
+
+    mu = mean(b)
+    @inbounds for i in eachindex(y)
+        b[i] = b[i] - mu
+    end
+
+    return nothing
+end
+
 
 function forward!(ldli::LDLinv{Tind,Tval}, y::Vector) where {Tind,Tval}
 
