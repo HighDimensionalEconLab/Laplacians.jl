@@ -969,6 +969,164 @@ For more info, see http://danspielman.github.io/Laplacians.jl/latest/usingSolver
 """
 approxchol_sddm = sddmWrapLap(approxchol_lap)
 
+#===============================
+
+ Compute only the LDLinv preconditioner
+
+ ==============================#
+
+ function approxchol_lap_pc(a::SparseMatrixCSC{Tv,Ti};
+   tol::Real=1e-6,
+   maxits=1000,
+   maxtime=Inf,
+   verbose=false,
+   pcgIts=Int[],
+   params=ApproxCholParams()) where {Tv,Ti}
+
+   if minimum(a.nzval) < 0
+       error("Adjacency matrix can not have negative edge weights")
+   end
+
+     return Laplacians.lapWrapComponents(approxchol_lap1_pc), a,
+     verbose=verbose,
+     tol=tol,
+     maxits=maxits,
+     maxtime=maxtime,
+     pcgIts=pcgIts,
+     params=params)
+
+ end
+
+ function approxchol_lapGreedy_pc(a::SparseMatrixCSC;
+   tol::Real=1e-6,
+   maxits=1000,
+   maxtime=Inf,
+   verbose=false,
+   pcgIts=Int[],
+   params=ApproxCholParams())
+
+   tol_ =tol
+   maxits_ =maxits
+   maxtime_ =maxtime
+   verbose_ =verbose
+   pcgIts_ =pcgIts
+
+   t1 = time()
+
+   la = lap(a) # a hit !?
+
+   llmat = LLmatp(a)
+   ldli = approxChol(llmat)
+   return ldli
+
+ end
+
+ function approxchol_lapGiven_pc(a::SparseMatrixCSC;
+   tol::Real=1e-6,
+   maxits=1000,
+   maxtime=Inf,
+   verbose=false,
+   pcgIts=Int[],
+   params=ApproxCholParams())
+
+   tol_ =tol
+   maxits_ =maxits
+   maxtime_ =maxtime
+   verbose_ =verbose
+   pcgIts_ =pcgIts
+
+   t1 = time()
+
+   la = lap(a)
+
+   llmat = LLMatOrd(a)
+   ldli = approxChol(llmat)
+
+ end
+
+ function approxchol_lapWdeg_pc(a::SparseMatrixCSC;
+   tol::Real=1e-6,
+   maxits=1000,
+   maxtime=Inf,
+   verbose=false,
+   pcgIts=Int[],
+   params=ApproxCholParams())
+
+   tol_ =tol
+   maxits_ =maxits
+   maxtime_ =maxtime
+   verbose_ =verbose
+   pcgIts_ =pcgIts
+
+   t1 = time()
+
+   la = lap(a)
+
+   v = vec(sum(a,dims=1))
+   v = v .* (1 .+ rand(length(v)))
+   p = sortperm(v)
+
+   llmat = LLMatOrd(a,p)
+   ldli = approxChol(llmat)
+
+   ip = invperm(p)
+   ldlip = LDLinv(p[ldli.col], ldli.colptr, p[ldli.rowval], ldli.fval, ldli.d[ip]);
+   return ldlip
+
+ end
+
+
+
+ function approxchol_lap1_pc(a::SparseMatrixCSC{Tv,Ti};
+   tol::Real=1e-6,
+   maxits=1000,
+   maxtime=Inf,
+   verbose=false,
+   pcgIts=Int[],
+   params=ApproxCholParams()) where {Tv,Ti}
+
+     tol_ =tol
+     maxits_ =maxits
+     maxtime_ =maxtime
+     verbose_ =verbose
+     pcgIts_ =pcgIts
+
+
+     if params.order == :deg
+
+       return approxchol_lapGreedy_pc(a,
+         verbose=verbose,
+         tol=tol,
+         maxits=maxits,
+         maxtime=maxtime,
+         pcgIts=pcgIts,
+         params=params)
+
+
+     elseif params.order == :wdeg
+
+       return approxchol_lapWdeg_pc(a,
+         verbose=verbose,
+         tol=tol,
+         maxits=maxits,
+         maxtime=maxtime,
+         pcgIts=pcgIts,
+         params=params)
+
+
+     else
+       return approxchol_lapGiven_pc(a,
+         verbose=verbose,
+         tol=tol,
+         maxits=maxits,
+         maxtime=maxtime,
+         pcgIts=pcgIts,
+         params=params)
+
+
+     end
+
+ end
 
 
 
