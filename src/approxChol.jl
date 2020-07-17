@@ -987,7 +987,7 @@ approxchol_sddm = sddmWrapLap(approxchol_lap)
        error("Adjacency matrix can not have negative edge weights")
    end
 
-     return Laplacians.lapWrapComponents(approxchol_lap1_pc), a,
+     return Laplacians.lapWrapComponents(approxchol_lap1_pc, a,
      verbose=verbose,
      tol=tol,
      maxits=maxits,
