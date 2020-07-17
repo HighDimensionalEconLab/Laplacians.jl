@@ -588,23 +588,25 @@ function LDLsolver(ldli::LDLinv, b::Vector)
 end
 
 # TODO: Should we flip the arguments later? I am keeping with the packages style
-function LDLsolver!(ldli::LDLinv, b::Vector)
-    forward!(ldli, b)
+function LDLsolver!(y::Vector, ldli::LDLinv, b::Vector)
+    y .= b
+
+    forward!(ldli, y)
 
     @inbounds for i in 1:(length(ldli.d))
         if ldli.d[i] != 0
-            b[i] /= ldli.d[i]
+            y[i] /= ldli.d[i]
         end
     end
 
-    backward!(ldli, b)
+    backward!(ldli, y)
 
-    mu = mean(b)
+    mu = mean(y)
     @inbounds for i in eachindex(y)
-        b[i] = b[i] - mu
+        y[i] = y[i] - mu
     end
 
-    return nothing
+    return y
 end
 
 
