@@ -587,7 +587,6 @@ function LDLsolver(ldli::LDLinv, b::Vector)
     return y
 end
 
-# TODO: Should we flip the arguments later? I am keeping with the packages style
 function LDLsolver!(y::Vector, ldli::LDLinv, b::Vector)
     y .= b
 
